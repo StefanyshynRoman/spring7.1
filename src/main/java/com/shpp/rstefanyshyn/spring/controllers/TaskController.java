@@ -1,182 +1,117 @@
 package com.shpp.rstefanyshyn.spring.controllers;
 
-import com.shpp.rstefanyshyn.spring.exeption.InvalidStatusException;
 import com.shpp.rstefanyshyn.spring.exeption.TaskNotFoundException;
 import com.shpp.rstefanyshyn.spring.model.Task;
 import com.shpp.rstefanyshyn.spring.repository.TaskRepository;
 import com.shpp.rstefanyshyn.spring.services.TaskModelAssembler;
+import com.shpp.rstefanyshyn.spring.services.TaskService;
+import com.shpp.rstefanyshyn.spring.services.UpdateEventRequest;
 import com.shpp.rstefanyshyn.spring.statemachine.Status;
 import com.shpp.rstefanyshyn.spring.statemachine.StatusEvent;
+import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.statemachine.state.State;
-import org.springframework.statemachine.support.DefaultStateMachineContext;
-import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
-import org.springframework.statemachine.transition.Transition;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
+@SecurityScheme(
+        name = "Java in use api",
+        scheme = "Basic",
+        type = SecuritySchemeType.HTTP,
+        in = SecuritySchemeIn.HEADER)
 @Slf4j
 @RestController
 public class TaskController {
     private final TaskRepository taskRepository;
-    private final TaskModelAssembler assembler;
-    private StateMachine<Status, StatusEvent> stateMachine1;
+    private final TaskService taskService;
 
-    private final StateMachineFactory<Status, StatusEvent> stateMachineFactory;
 
     @Autowired
     public TaskController(TaskRepository taskRepository, TaskModelAssembler assembler,
-                          StateMachine<Status, StatusEvent> stateMachine, StateMachineFactory<Status, StatusEvent> stateMachineFactory) {
+                          StateMachine<Status, StatusEvent> stateMachine, TaskService taskService, StateMachineFactory<Status, StatusEvent> stateMachineFactory) {
         this.taskRepository = taskRepository;
-        this.assembler = assembler;
-        this.stateMachine1 = stateMachine;
-        this.stateMachineFactory = stateMachineFactory;
+        this.taskService = taskService;
 
     }
 
     @GetMapping("/task")
     public CollectionModel<EntityModel<Task>> all() {
-
-        List<EntityModel<Task>> task = taskRepository.findAll().stream()
-                .map(assembler::toModel)
-                .collect(Collectors.toList());
-
-        return CollectionModel.of(task, linkTo(methodOn(TaskController.class).all()).withSelfRel());
+        return taskService.getAll();
     }
-
-    @GetMapping("/tasks/{id}")
+    @GetMapping("/")
+    public String startPage() {
+        return "Hi, welcome to Task manager ";
+    }
+    @GetMapping("/task/{id}")
     public EntityModel<Task> one(@PathVariable Long id) {
+        return taskService.getOne(id);
+    }
+  //  @PreAuthorize("hasRole('ADMIN')")
+  @SecurityRequirement(name = "Java in use api")
 
-        Task task = taskRepository.findById(id) //
-                .orElseThrow(() -> new TaskNotFoundException(id));
-
-        return assembler.toModel(task);
+    @PostMapping("/task")
+    Task newTask(@RequestBody Task task) {
+        task.setState(String.valueOf(Status.PLANNED));
+        return taskRepository.save(task);
     }
 
+    @PutMapping("/task/{id}/status")
+    public ResponseEntity<Task> changeState1(@ApiParam(allowableValues = "one, two, three")
+    @RequestBody Task task1) {
 
-//    @PutMapping("/tasks/{id}")
-//    public ResponseEntity<Task> replaceTask(@RequestBody Task newTask, @PathVariable Long id) {
-//        return taskRepository.findById(id)
-//                .map(task -> {
-//                    task.setTaskDescription(newTask.getTaskDescription());
-//                    task.setTargetDate(newTask.getTargetDate());
-//                    task.setStatus(newTask.getStatus());
-//                    Task updatedTask = taskRepository.save(task);
+        return taskService.changeState(task1);
+    }
+//@Operation(
+//        tags = "APIs",
+//        summary = "Find XYZ",
+//        parameters = {
+//                @Parameter(
+//                        in = ParameterIn.QUERY,
+//                        name = "id",
+//                        schema = @Schema(allowableValues = { "value1", "value2",
+//                                "value3", "value4" }),
+//                        description ="description ")
+//        })
 //
-//                    // Відправте подію до машини стану
-//                    stateMachine.sendEvent(StatusEvent.START);  // Або будь-яку іншу початкову подію
-//
-//                    return ResponseEntity.ok(updatedTask);
-//                })
-//                .orElseGet(() -> {
-//                    newTask.setId(id);
-//                    Task createdTask = taskRepository.save(newTask);
-//
-//                    // Відправте подію до машини стану
-//                    stateMachine.sendEvent(StatusEvent.START);  // Або будь-яку іншу початкову подію
-//
-//                    return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
-//                });
-//    }
+//@PutMapping("/task/{id}")
+//    public ResponseEntity<Task> updateTaskStatus(@PathVariable Long id, @RequestBody UpdateEventRequest request) {
+//        Task task = taskRepository.findById(id) //
+//                .orElseThrow(() -> new TaskNotFoundException(id));
+//        task.setEvent(String.valueOf(request.getEvent()));
+//        taskRepository.save(task);
+//        log.error("-----------------------------------{}",request.getEvent());
+//        log.error("-----------------------------------{}",task.toString());
+//       // Task updatedTask = taskService.changeState(task).getBody();
+//        return taskService.changeState(task);
+//        if (updatedTask != null) {
+//            return ResponseEntity.ok(updatedTask);
+//        } else {
+//            return ResponseEntity.notFound().build();
+//        }
 
-    @PutMapping("/tasks/{id}/status")
-    public ResponseEntity<Task> changeState(@RequestBody Task task1) {
-        StateMachine<Status, StatusEvent> sm = build(task1);
-        sm.getExtendedState().getVariables().put("extendedState", task1.getExtendedState());
-        stateMachine1= build(task1);
-        sm.sendEvent(
-                MessageBuilder.withPayload(StatusEvent.valueOf(task1.getEvent()))
-                        .setHeader("taskId", task1.getId())
-
-                        .setHeader("state", task1.getState())
-                        .build()
-        );
-//        log.info("sm_____________ {}",  sm.getState().getIds());
-//        log.info("sm_new_________ {}",  stateMachine1.getState().getIds());
-                if (sm.getState().getId().equals(stateMachine1.getState().getId())) {
-        log.error("State is already the same.");
-                    throw new InvalidStatusException("Status is bad"+sm.getState().getId().toString());
+    //   }
+    // @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "Java in use api")
+    @DeleteMapping("/task/{id}")
+    void deleteTask(@PathVariable Long id) {
+        if (taskRepository.existsById(id)) {
+            taskRepository.deleteById(id);
+        } else {
+            throw new TaskNotFoundException(id);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(task1);
     }
-
-//    @PatchMapping("/tasks/{id}/status")
-//    extendedState
-//    public ResponseEntity<EntityModel<Task>> updateTaskStatus(@PathVariable Long id, @RequestParam StatusEvent newStatusEvent) {
-//        return taskRepository.findById(id)
-//                .map(task -> {
-//                    StateMachine<Status, StatusEvent> stateMachine = stateMachineFactory.getStateMachine();
-//
-//                    // Отримуємо поточний контекст стану задачі
-//                    StateMachineContext<Status, StatusEvent> currentState = task.getStateMachineContext();
-//
-//                    // Переініціалізуємо станову машину з поточним контекстом
-//                    stateMachine.getStateMachineAccessor().doWithAllRegions(access -> {
-//                        access.resetStateMachine(new DefaultStateMachineContext<>(currentState.getState(), null, null, null));
-//                    });
-//
-//                    // Відправляємо подію до машини стану
-//                    boolean transitionResult = stateMachine.sendEvent(newStatusEvent);
-//
-//                    if (transitionResult) {
-//                        // Оновлюємо стан задачі
-//                        task.setState(String.valueOf(stateMachine.getState().getId()));
-//                        // Оновлюємо контекст стану
-//                        task.setStateMachineContext(stateMachine.getExtendedState().get("stateMachineContext", StateMachineContext.class));
-//                        Task updatedTask = taskRepository.save(task);
-//                        return ResponseEntity.ok(assembler.toModel(updatedTask));
-//                    } else {
-//                        return ResponseEntity.badRequest().body(assembler.toModel(task));
-//                    }
-//                })
-//                .orElseGet(() -> ResponseEntity.notFound().build());
-//    }
-
-    public StateMachine<Status, StatusEvent> build(final Task task) {
-        var orderDb = this.taskRepository.findById(task.getId());
-        var stateMachine = this.stateMachineFactory.getStateMachine(task.getId().toString());
-        log.warn("stateMachine   {}" ,stateMachine);
-        log.warn("orderDb   {}" ,orderDb);
-        stateMachine.stop();
-        stateMachine.getStateMachineAccessor()
-                .doWithAllRegions(sma -> {
-                    sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<>() {
-                        @Override
-                        public void preStateChange(State<Status, StatusEvent> state, Message<StatusEvent> message, Transition<Status,
-                                StatusEvent> transition, StateMachine<Status, StatusEvent> stateMachine, StateMachine<Status, StatusEvent> rootStateMachine) {
-                            var orderId = Long.class.cast(message.getHeaders().get("taskId"));
-                            var taskOptional = taskRepository.findById(orderId);
-                            if (taskOptional.isPresent() ) {
-
-                                taskOptional.get().setState(state.getId().name());
-                                taskRepository.save(taskOptional.get());
-
-                            }
-                        }
-                    });
-
-                    sma.resetStateMachine(new DefaultStateMachineContext<>(Status.valueOf(orderDb.get().getState()), null, null, null));
-                });
-
-        stateMachine.start();
-        return stateMachine;
-
-    }
-
 }
 
 

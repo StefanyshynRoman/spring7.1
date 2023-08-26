@@ -2,6 +2,7 @@ package com.shpp.rstefanyshyn.spring.model;
 
 import com.shpp.rstefanyshyn.spring.statemachine.Status;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
@@ -9,7 +10,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Entity
-
+@Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -32,7 +33,6 @@ public class Task {
 
     @Column()
     private String state;
-
     public Task(String taskDescription, LocalDate targetDate, Status status) {
 
         this.taskDescription = taskDescription;
@@ -45,18 +45,27 @@ public class Task {
         this.targetDate = targetDate;
         this.state = String.valueOf(Status.PLANNED);
     }
+    public Task(  String event) {
+        this.id=id;
+        this.taskDescription = getTaskDescription();
+        this.targetDate = LocalDate.ofEpochDay(System.currentTimeMillis());
+        this.state = String.valueOf(Status.PLANNED);
+    }
+
     @Transient
     String event;
 
     @Transient
     String extendedState;
 
+
     @Override
     public String toString() {
         return "Task {" +
-                "Task description ='" + taskDescription + '\'' +
+                "id = '" + id + '\'' +
+                ", Task description ='" + taskDescription + '\'' +
                 ", Date of finish = " + targetDate +
-                ", Status ='" + state +
+                ", Status ='" + state +'\''+
                 '}';
 
     }

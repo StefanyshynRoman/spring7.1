@@ -1,9 +1,13 @@
 package com.shpp.rstefanyshyn.spring.exeption;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 public class ErrorResponse {
     private int status;
     private String message;
     private long timestamp;
+    private LocalDateTime localDateTime;
 
     public int getStatus() {
         return status;
@@ -26,7 +30,16 @@ public class ErrorResponse {
     }
 
     public void setTimestamp(long timestamp) {
+
         this.timestamp = timestamp;
+    }
+
+    public LocalDateTime getLocalDateTime() {
+        return localDateTime;
+    }
+
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+        this.localDateTime = localDateTime;
     }
 
 

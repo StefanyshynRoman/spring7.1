@@ -1,6 +1,5 @@
 package com.shpp.rstefanyshyn.spring.exeption;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class ErrorResponse {

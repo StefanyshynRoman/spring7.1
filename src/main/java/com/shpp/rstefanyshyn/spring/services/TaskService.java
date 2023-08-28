@@ -1,7 +1,6 @@
 package com.shpp.rstefanyshyn.spring.services;
 
 import com.shpp.rstefanyshyn.spring.controllers.TaskController;
-import com.shpp.rstefanyshyn.spring.exeption.InvalidEventException;
 import com.shpp.rstefanyshyn.spring.exeption.InvalidStatusException;
 import com.shpp.rstefanyshyn.spring.exeption.TaskNotFoundException;
 import com.shpp.rstefanyshyn.spring.model.Task;
@@ -10,12 +9,15 @@ import com.shpp.rstefanyshyn.spring.statemachine.Status;
 import com.shpp.rstefanyshyn.spring.statemachine.StatusEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.state.State;
@@ -26,6 +28,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -51,7 +55,9 @@ public class TaskService {
     public TaskService() {
     }
 
-    public ResponseEntity<Task> changeState(Task task1) {
+    public ResponseEntity<Task> changeState(Task task1, Locale locale) {
+        ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
+
         StateMachine<Status, StatusEvent> sm = build(task1);
         sm.getExtendedState().getVariables().put("extendedState", task1.getExtendedState());
 
@@ -64,8 +70,9 @@ public class TaskService {
                             .build()
             );
         } catch (Exception e){
-            throw new InvalidStatusException(task1.getEvent().toString()+
-                    " is invalid event, please  chose:  START, POSTPONE, NOTIFY, SIGN, COMPLETE, CANCEL");
+            throw new InvalidStatusException(task1.getEvent().toString()+" - "+
+                 bundle.getString("invalidStatusMessage"));
+                 //   " is invalid event, please  chose:  START, POSTPONE, NOTIFY, SIGN, COMPLETE, CANCEL");
         }
 
         if (sm.getState().getId().equals(stateMachine1.getState().getId())) {
@@ -113,9 +120,10 @@ public class TaskService {
     }
 
     public EntityModel<Task> getOne(@PathVariable Long id) {
+     //   ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
 
         Task task = taskRepository.findById(id) //
-                .orElseThrow(() -> new TaskNotFoundException(id));
+                .orElseThrow(() -> new TaskNotFoundException(id,""+"notFoundTaskMessages"));
 
         return assembler.toModel(task);
     }

@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.shpp.rstefanyshyn</groupId>
-    <artifactId>pracktic6</artifactId>
-    <version>1.0.3</version>
-    <name>pracktic6</name>
-    <description>API for mentor pracktic6</description>
+    <artifactId>Pracktic7</artifactId>
+    <version>2.1.1</version>
+    <name>Practice7</name>
+    <description>API for mentor practice7</description>
     <packaging>jar</packaging>
     <properties>
         <java.version>11</java.version>
@@ -105,7 +105,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-messaging</artifactId>
-            <version>6.0.11</version>
+            <version>5.3.24</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
@@ -123,7 +123,11 @@
             <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+            <version>1.5.2.RELEASE</version>
+        </dependency>
     </dependencies>
 
     <build>

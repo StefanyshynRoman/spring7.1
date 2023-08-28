@@ -1,5 +1,6 @@
 package com.shpp.rstefanyshyn.spring.model;
 
+import com.shpp.rstefanyshyn.spring.exeption.InvalidDataException;
 import com.shpp.rstefanyshyn.spring.statemachine.Status;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,6 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Table
-@ToString
 public class Task {
 
 
@@ -26,31 +26,33 @@ public class Task {
     @NotEmpty(message = "Task description must not be empty")
     @Column()
     private String taskDescription;
+
+    public void setTargetDate(LocalDate targetDate) throws InvalidDataException {
+        this.targetDate = targetDate;
+    }
+
     @NotNull
-    //@Future(message = "Date must be in future")
     @Column()
     private LocalDate targetDate;
 
     @Column()
     private String state;
+
     public Task(String taskDescription, LocalDate targetDate, Status status) {
 
         this.taskDescription = taskDescription;
         this.targetDate = targetDate;
         this.state = String.valueOf(status);
     }
+
     public Task(String taskDescription, LocalDate targetDate) {
 
         this.taskDescription = taskDescription;
         this.targetDate = targetDate;
         this.state = String.valueOf(Status.PLANNED);
     }
-    public Task(  String event) {
-        this.id=id;
-        this.taskDescription = getTaskDescription();
-        this.targetDate = LocalDate.ofEpochDay(System.currentTimeMillis());
-        this.state = String.valueOf(Status.PLANNED);
-    }
+
+
 
     @Transient
     String event;
@@ -58,14 +60,13 @@ public class Task {
     @Transient
     String extendedState;
 
-
     @Override
     public String toString() {
         return "Task {" +
                 "id = '" + id + '\'' +
                 ", Task description ='" + taskDescription + '\'' +
                 ", Date of finish = " + targetDate +
-                ", Status ='" + state +'\''+
+                ", Status ='" + state + '\'' +
                 '}';
 
     }

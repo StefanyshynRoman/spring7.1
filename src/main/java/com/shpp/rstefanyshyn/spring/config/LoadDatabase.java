@@ -20,8 +20,8 @@ class LoadDatabase {
     CommandLineRunner initDatabase(PersonRepository repository) {
 
         return args -> {
-            log.info("Preloading " + repository.save(new Person( "Roman", LocalDate.of(1988, 5, 15),"male","3227707737")));
-            log.info("Preloading " + repository.save(new Person("Marina",LocalDate.of(1989, 2, 23),"female","3256120341")));
+            log.info("Preloading " + repository.save(new Person("Roman", LocalDate.of(1988, 5, 15), "male", "3227707737")));
+            log.info("Preloading " + repository.save(new Person("Marina", LocalDate.of(1989, 2, 23), "female", "3256120341")));
         };
     }
 }

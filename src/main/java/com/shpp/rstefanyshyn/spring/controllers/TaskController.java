@@ -1,5 +1,6 @@
 package com.shpp.rstefanyshyn.spring.controllers;
 
+import com.shpp.rstefanyshyn.spring.config.aop.LogExecutionTime;
 import com.shpp.rstefanyshyn.spring.exeption.InvalidDataException;
 import com.shpp.rstefanyshyn.spring.exeption.TaskNotFoundException;
 import com.shpp.rstefanyshyn.spring.model.Task;
@@ -46,11 +47,13 @@ public class TaskController {
     }
 
     @GetMapping("/task")
+    @LogExecutionTime
     public CollectionModel<EntityModel<Task>> all() {
         return taskService.getAll();
     }
 
     @GetMapping("/")
+    @LogExecutionTime
     public String startPage(Locale locale) {
 
 
@@ -59,6 +62,7 @@ public class TaskController {
     }
 
     @GetMapping("/task/{id}")
+    @LogExecutionTime
     public EntityModel<Task> one(@PathVariable Long id) {
         return taskService.getOne(id);
     }
@@ -67,6 +71,8 @@ public class TaskController {
     @SecurityRequirement(name = "Authorize")
 
     @PostMapping("/task")
+    @LogExecutionTime
+
     Task newTask(@RequestBody Task task, Locale locale) {
         ResourceBundle bundle = ResourceBundle.getBundle("messages", locale);
 
@@ -78,6 +84,7 @@ public class TaskController {
     }
 
     @PutMapping("/task/{id}/status")
+    @LogExecutionTime
     public ResponseEntity<Task> changeState1(@RequestBody Task task1, Locale locale) {
         long id = task1.getId();
         if (taskRepository.existsById(id)) {
@@ -90,6 +97,7 @@ public class TaskController {
 
     @SecurityRequirement(name = "Authorize")
     @DeleteMapping("/task/{id}")
+    @LogExecutionTime
     void deleteTask(@PathVariable Long id, Locale locale) {
         if (taskRepository.existsById(id)) {
             taskRepository.deleteById(id);

@@ -1,5 +1,6 @@
 package com.shpp.rstefanyshyn.spring.controllers;
 
+import com.shpp.rstefanyshyn.spring.config.aop.LogExecutionTime;
 import com.shpp.rstefanyshyn.spring.exeption.InvalidPersonException;
 import com.shpp.rstefanyshyn.spring.exeption.PersonNotFoundException;
 import com.shpp.rstefanyshyn.spring.model.Person;
@@ -37,6 +38,7 @@ public class PersonController {
     }
 
     @GetMapping("/persons")
+    @LogExecutionTime
     public CollectionModel<EntityModel<Person>> all() {
 
         List<EntityModel<Person>> employees = personRepository.findAll().stream()
@@ -47,6 +49,7 @@ public class PersonController {
     }
 
     @GetMapping("/persons/{id}")
+    @LogExecutionTime
     public EntityModel<Person> one(@PathVariable Long id) {
 
         Person person = personRepository.findById(id) //
@@ -57,6 +60,7 @@ public class PersonController {
 
 
     @PostMapping("/persons")
+    @LogExecutionTime
     Person newEmployee(@RequestBody Person newPerson) {
         isValidate(newPerson);
         return personRepository.save(newPerson);
@@ -81,6 +85,7 @@ public class PersonController {
 //    }
 
     @PutMapping("/persons/{id}")
+    @LogExecutionTime
     public ResponseEntity<Person> replaceEmployee(@RequestBody Person newPerson, @PathVariable Long id) {
         isValidate(newPerson);
 
@@ -102,6 +107,7 @@ public class PersonController {
 
 
     @DeleteMapping("/persons/{id}")
+    @LogExecutionTime
     void deletePerson(@PathVariable Long id) {
         if (personRepository.existsById(id)) {
             personRepository.deleteById(id);
